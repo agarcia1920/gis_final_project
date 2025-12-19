@@ -1,110 +1,658 @@
 ---
-title: "Coup-Proofing via Capital Relocation"
+title: "An Island All By Itself? GIS-driven Approaches to Understanding Staten Island's Divergent Political Behavior within New York City"
 subtitle: "DSAN 6750 / PPOL 6805: GIS for Spatial Data Science"
 authors:
-  - name: Jeff Jacobs
-    email: jj1088@georgetown.edu
+  - name: Alexander Garcia
+    email: arg169@georgetown.edu
     affiliation: Georgetown University
     corresponding: true
 df-print: kable
 bibliography: GIS_Manuscript.bib
-title-block-banner: "#E69F0095"
+title-block-banner: "#90D5FF"
 title-block-banner-color: "black"
 format:
   html:
     df-print: kable
+    code-fold: true
   pdf:
     # https://quarto.org/docs/reference/formats/pdf.html
     link-citations: true
 prefer-html: true
 ---
 
-## Introduction
+## ABSTRACT
+New York City is often touted by political experts as one of the most progressive cities in the United States, marked by countless lopsided victories for Democratic candidates, along with a liberal supermajority in the City Council. Staten Island, however, has been noted to deviate from the voting patterns of its four neighboring boroughs; it is the only borough to vote for Donald Trump in any of the past three presidential elections (and it voted for him thrice), and it is the only borough to have a majority of its City Council delegation be Republicans. Despite the high population density and proximity to some of the most progressive voting blocs in the United States, Staten Island seems to be a political outlier in New York City. This project aims to investigate the extent to which Staten Island truly is an anomaly, or rather if it follows suit with other conservative pockets in the city. In a GIS-driven approach, my research aims to use cluster-detection methods, specifically Local Moran's I, to identify the most conservative regions across the five boroughs and compare these areas to Staten Island across several key factors captured using the 2023 American Community Survey (these will be regions like Southern Brooklyn and Northeastern Queens). More importantly, I aim to find clusters within the city that are similar to Staten Island demographically but differ politically and will investigate the demographic and geographic factors that most contribute to such contrasting behavior. Further, spatial autocorrelation and regression tools will assist me in reaching my conclusions on whether Staten Island is an outlier and, if so, what is behind this outlier status. The main unit of observation will be New York's Election Districts (EDs), with Neighborhood Tabulation Areas (NTAs) also being taken into consideration. The specific election result we will be investigating is the 2022 Senate election, with this election data being both easily accessible and relatively on par with New York's current typical voting patterns—Schumer (D) won this race 57%-43% statewide, whereas the governor's race that same year was much closer than normal, with Hochul (D) winning 53%-47%.
 
-Several previous studies have found robust relationships between spatial properties of a country's **capital city** and that country's propensity for **conflict** and **misgovernance**.
+## INTRODUCTION
+Any born-and-raised New Yorker can attest to the extensive amount of sociocultural diversity one is exposed to while living in the city, no matter where one resides. Growing up, I gained knowledge on a multitude of different ethnic enclaves within New York and their various customs. It was not until the Trump-era of US politics (2016 onwards) that I noticed an intense political divide just within the city's limits. In my early years living in Sunnyside and Saint Albans, Queens (and even in my first few years living in Staten Island) I had gained a sense that President Obama was a pretty well-received politician within NYC. It was not until Donald Trump won in 2016 and the subsequent years when I gained even greater political expertise that I really grasped the magnitude which Staten Island differed from the other four boroughs. In my time living in Staten Island, the borough has gone from a purple county to a heavily-populous Republican stronghold in New York. For reference, the county voted for Obama by 2.5 percentage points in 2012, then Trump +15 percentage points in 2016 and 2020, and most recently Trump +29 points in 2024. This is quite a dramatic shift in just 12 years. While a shift like this could be overlooked as statistical noise in a town with a few hundred residents, for a county home to nearly half a million New Yorkers it is clear that Trump has mobilized deeply conservative pockets in Staten Island to vote for him. With this new reality of Staten Island as a safe red county, it is noteworthy to investigate the extent to which Staten Island truly is a political outlier. There are other well-known conservative pockets within the city (Southern Brooklyn, Northeastern Queens), but none quite as geographically isolated as Staten Island (it being the southernmost borough, and the only one that does not directly border another borough). 
 
-Perceptions of this linkage also have an effect on "coup-proofing" decisions made by national governments. A recent BBC interview with Equatorial Guinea's President Teodoro Obiang, for example, highlighted this as a factor behind his decision to relocate the capital city:
+## LITERATURE REVIEW
+As stated above, New York City is known for delivering large victories to Democratic candidates, especially in federal elections such as the 2022 Senate election. With this being the case, Staten Island has been noted as extremely divergent from these liberal voting trends despite access to many of the same resources and diverse communities as the rest of the city, along with a geographic proximity that is comparable to ultra-liberal urban areas outside of New York like Westchester County, NY and Hudson County, NJ. Within this context, Staten Island has long been characterized as a political outlier. Kramer and Flanagan’s *Staten Island: Conservative Bastion in a Liberal City* provides the foundational account of this divergence, documenting how Staten Island developed a distinct political identity shaped by geographic isolation, suburbanization, and historical resistance to Manhattan-centered governance (@kramer_staten_2012). Unlike the city’s other boroughs, Staten Island’s political culture has been closely tied to homeownership, white ethnic identity, and skepticism toward urban politics. As a result, its conservatism has often been framed as exceptional within the New York City political landscape rather than as part of a broader spatial pattern.
 
-> It's the remoteness of Oyala that makes it so appealing to President Obiang. In a rare interview he described how rebels had recently plotted a seaborne assault on his palace in the current capital, Malabo. 'We need a secure place for my government and for future governments. That's why we have created Oyala, to guarantee the government of Equatorial Guinea.' [@sackur_equatorial_2012]
+However, much of the existing literature treats Staten Island’s political behavior as a borough-level anomaly rather than asking whether similar conservative enclaves exist elsewhere in the city. While Kramer and Flanagan convincingly establish Staten Island’s distinctiveness, their analysis largely predates contemporary GIS-driven tools capable of identifying spatial clustering at a more refined level than simply the boroughs. This emphasizes our concern of whether Staten Island is truly unique, or whether it reflects a broader pattern of geographically concentrated conservatism within an otherwise progressive city.
 
-This case is far from exceptional, as an even more recent *Washington Post* article points out with respect to Myanmar's decision to move its capital from Yangon to Naypyidaw:
+Urban geography scholars provide a useful theoretical framework for addressing this matter. In *The Geography of Opportunity: Race and Housing Choice in Metropolitan America* Briggs emphasizes that sociopolitical outcomes are deeply shaped by geographic structures of opportunity, arguing that where we live matters more than we realize (@briggs_geography_2005). Neighborhoods determine access to transportation, housing, public services, and social networks, all of which influence political behavior. Voting patterns are not simply expressions of individual ideology but are embedded within spatial contexts that structure daily life. This insight suggests that political conservatism in New York City may cluster geographically in areas that share similar opportunity structures, even when those areas are located outside Staten Island.
 
-> Analysts have described the decision as motivated by a desire to secure the military’s seat of power from any threat of protests or invasions. [@berger_myanmars_2021]
+Research on urban segregation further supports the need for more refined spatial analysis. Huttman, Blauw, and Saltman’s *Urban Housing Segregation of Minorities in Western Europe and the United States* demonstrates how housing markets and zoning practices produce durable patterns of demographic segregation within cities (@blauw_urban_1991). These processes operate at neighborhood and sub-neighborhood levels, often obscured by larger geographic units such as boroughs or counties. Importantly, the authors show that demographic similarity does not necessarily translate into uniform political behavior, as local contexts and spatial isolation can produce divergent outcomes among otherwise comparable populations. This insight is especially relevant to New York City, where neighborhoods with similar levels of income, housing, or racial diversity may exhibit drastically different political alignments.
 
-Most of these studies, however, are based on observations of **conflict events**. In this study, we study the more fundamental variable of a capital's distance from the **population centroid** of the country.
+While prior work has treated Staten Island as a borough-level anomaly, urban geography and segregation scholarship suggests that political behavior clusters at much finer spatial levels. This motivates the use of Election Districts and Local Moran’s I to detect conservative clusters throughout New York City. Through spatial autocorrelation and regression techniques, this research seeks to determine whether Staten Island is truly an exception or whether its political behavior reflects a broader spatial pattern of urban conservatism within New York City.
 
-## Literature Review
-
-@campante_capital_2019 analyzes the relationship between the location of a **capital city** and the degree of conflict and misgovernance in a given country. Their two key findings are that:
-
-> Conflict is more likely to emerge (and dislodge incumbents) closer to the capital
-
-and
-
-> Isolated capitals are associated with misgovernance.
-
-This first finding is illustrated in @fig-conflict-dist
-
-![](images/conflict_dist.svg){#fig-conflict-dist}
-
-## Methodology
-
-The **population centroids** we use herein might require some explanation, since the term "centroid" can be ambiguous.
-
-Here, the population centroids are drawn from @hall_population_2019
-
-## Exploratory Data Analysis (EDA)
-
-Here we plot the base GIS objects we're analyzing: the location of each **capital city** (in purple) and each **population centroid** (in yellow).
-
+## PART 1: DATA COLLECTION
+This research project will explore Staten Island's political outlier status in New York City, leveraging GIS-driven approaches such as sf object manipulation, Euclidean distance calculation, cluster detection, Local Moran's I, local indicators of spatial association (LISA), and spatial autoregression models (SAR) to achieve this goal. It is relevant to note that the terms Staten Island and Richmond County will be used interchangeably in this project to refer to our borough at interest. This first code block demonstrates the R libraries used in this research (tidyverse, sf, mapview, leaflet, spdep, sfdep, and spatialreg) and reads a GEOjson file that displays our secondary unit of observation, New York City's Neighborhood Tabulation Areas (NTAs) (@nyc_ntas_2020):
 ```{r}
-#| label: imports
-library(tidyverse) |> suppressPackageStartupMessages()
-library(sf) |> suppressPackageStartupMessages()
-library(mapview) |> suppressPackageStartupMessages()
-library(units) |> suppressPackageStartupMessages()
-cb_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(leaflet.extras)
+library(spdep)
+
+nta <- st_read("nyc_nta.geojson")
+
+mapview(nta)
 ```
 
-```{r}
-#| label: load-eda
-merged_long_sf <- readRDS("data/merged_long_sf.rds")
-mapview(merged_long_sf, zcol="name", cex=4, label="geounit")
-```
-
-We then construct an **area-normalized** measure of capital-centroid distance $\text{dist}^{\textsf{AN}}$, using the formula
-
-$$
-\text{dist}^{\textsf{AN}}_i = \text{dist}_i / \sqrt{\text{area}_i}.
-$$
-
-A plot of this measure by country looks as follows:
+This map from NYC Open Data provides a neighborhood map of New York City that is generally consistent with most New Yorkers' concepts of the neighborhood subdivisions. Several neighborhoods often fall into one NTA in this map, often with the NTA title separating each neighborhood with a hyphen (ex: West New Brighton-Silver Lake-Grymes Hill). At times, some neighborhoods are buried within an NTA with no mention in the title (ex: NoHo falls within the Greenwich Village NTA). Despite these limitations, this NYC-certified data is a logical secondary unit of observation to understand political clusters at a neighborhood level. Our main unit of observation is provided below, New York City's election districts (EDs) provided by NYC Open Data (@nyc_election_districts):
 
 ```{r}
-#| label: plot-area
-merged_area_sf <- readRDS("data/merged_area_sf.rds")
-mapview(merged_area_sf, zcol="scaled_dist")
+e_districts <- st_read("nyc_ed.geojson")
+
+mapview(e_districts)
 ```
 
-## Hypothesis Testing (Regression)
+Above is a mapview of New York City's EDs, which is the smallest level at which New York records their election data. EDs are roughly equivalent to the size of census tracts, though they do vary in population. In order to gauge the political behavior of each ED, we must use an election as an example for typical, current New York political behavior. The election I have chosen to use to achieve this is the 2022 New York Senate election. In this election, the Democratic incumbent Chuck Schumer defeated the Republican challenger Joe Pinion by 14 percentage points (57%-43%), a much more typical result than the mere 6 point victory in the Governor's race that same year. This election data is provided by Benjamin Rosenblatt at the ED level (@rosenblatt_ny22_election_district), and below is the rest of my code in the introductory section that combines the NTA and ED sf object data with the election data:
 
 ```{r}
-#| label: load-regression-data
-merged_sub_sf <- readRDS("data/merged_sub_sf.rds")
-merged_sub_sf |> head()
+election<-read.csv("2022_election.csv")
+
+election <- election |>
+  mutate(
+    elect_dist = substr(GEOID, 8, 12)
+  )
+
+nyc_elections <- election |>
+  filter(county %in% c("Bronx", "Kings", "New York", "Queens", "Richmond"))
+
+nyc_elections[is.na(nyc_elections)] <- 0
+
+nyc_elections <- nyc_elections |>
+  mutate(
+    dem_total = USSen_DEM + USSen_WOR,
+    rep_total = USSen_REP + USSen_CON
+  )
+
+nyc_elections <- nyc_elections |>
+  select(
+    elect_dist,
+    county,
+    dem_total,
+    rep_total
+  )
 ```
+
+In the code cell above, I load in the csv file that contains the 2022 election data, then mutate the GEOID field such that I can extract the election district number from each observation. Next, I restrict to only districts within the 5 counties that comprise New York City and fill empty values with 0, as empty values denote that a specific candidate received 0 votes in a given district. I then create the dem_total and rep_total columns, which counts the amount of votes Schumer and Pinion received in each ED, respectively. It is relevant to note that both candidates ran under two party nominations each on the ballot, so my code accounts for this in these columns. Finally, I drop unnecessary columns in the election data and leave the data ready to be joined to an sf object.
 
 ```{r}
-#| label: plot-regression
-merged_sub_sf |> ggplot(aes(x=scaled_dist, y=total_score, label=NAME_ENGLI)) +
-  geom_point() +
-  geom_smooth(method='lm', formula= y~x) +
-  geom_text(size=4, nudge_y = 0.075) +
-  theme_classic()
+e_districts <- e_districts |>
+  left_join(nyc_elections, by = "elect_dist")
+
+eds_with_nta <- st_join(e_districts, nta[, c("nta2020", "ntaname")], left = TRUE)
+
+my_colors <- c(
+  "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3",
+  "#FF7F00", "#FFFF33", "#A65628", "#F781BF"
+)
+
+mapview(eds_with_nta, zcol = "ntaname", legend=F, col.regions=my_colors)
 ```
 
-## Discussion
+Above, I first join the election data to the ED sf object on the election district number column, and then I perform an st_join that combines the ED object with the NTA object, which places each ED within a given NTA. The map demonstrates, by color, each ED and the NTA they fall in, with tooltips to help provide a full description of each ED.
 
-## Conclusion
+```{r}
+eds_with_nta <- eds_with_nta |>
+  mutate(
+    dem_pct = ifelse((dem_total + rep_total) == 0, NA, dem_total / (dem_total + rep_total)),
+    rep_pct = ifelse((dem_total + rep_total) == 0, NA, rep_total / (dem_total + rep_total))
+  )
 
-Our evidence indicates that the spatial dynamics of **conflict** differ from the spatial dynamics of **misgovernance**.
+eds_with_nta <- eds_with_nta |>
+  mutate(
+    dem_pct = round(dem_pct * 100, 2),
+    rep_pct = round(rep_pct * 100, 2)
+  )
+
+red_blue <- colorRampPalette(c("firebrick", "darksalmon","lavender","lightskyblue", "navyblue"))
+
+mapview(
+  eds_with_nta,
+  zcol = "dem_pct",
+  legend = TRUE,
+  col.regions = red_blue(100)
+)
+```
+
+Above is a choropleth map of the dem_pct variable in the fully joined data, with EDs that have a higher percentage of Democratic voters colored in blue and more conservative EDs colored in red. For reference, amongst voters that voted for either Schumer or Pinion in the city, Schumer won those voters 74% to 26%. In Richmond County however, those votes broke 63% to 37% for Pinion (therefore, the other four counties voted for Schumer 77% to 23%). This 40 percentage point swing from the rest of NYC is extremely apparent in this choropleth, with the vast majority of Staten Island EDs being colored in medium to dark red. Nevertheless, Staten Island is not the only deep red pocket in this map; we see clear clusters of conservative voters in the southern portion of Brooklyn and the northeast of Queens as well. Highly democratic pockets make up much of the rest of the map as well, with notable Democratic turnout in Northern Brooklyn and Southeastern Queens. Further, Manhattan is notable as it is the only borough that had every one of its EDs vote for the Democratic candidate. Now that we have established our units of observation and identified the typical conservative and liberal regions within the five boroughs, we can move onto collecting demographic data that can help explain the extent to which Staten Island's voting behavior is truly an outlier (given the residents that make up the borough).
+
+## PART 2: DEMOGRAPHIC EXPLORATION
+In this initial section following our introduction we pull 2022 American Community Survey (ACS) demographic data from the tidycensus library in R at the census tract level. We then perform some geographic manipulations on this data to estimate the demographic makeup of each ED based on the census tract(s) it falls in. Finally, we will investigate geographic clusters within our data of EDs that are demographically similar to Richmond County yet vote in an opposing manner. This initial code block below details the API call to the US Census Bureau that provides us with the appropriate ACS data:
+```{r}
+library(tidycensus)
+
+vars <- c(
+  pop = "B02001_001",
+  white = "B02001_002",
+  black = "B02001_003",
+  asian = "B02001_005",
+  hispanic = "B03003_003",
+  foreign_born = "B05002_013",
+  med_income = "B19013_001",
+  owner_occ = "B25003_002",
+  renter_occ = "B25003_003",
+  total_units = "B25024_001",
+  sf_detached = "B25024_002",
+  commuters = "B08301_001",
+  drive_alone = "B08301_002",
+  carpool = "B08301_003",
+  transit_total = "B08301_010",
+  walk = "B08301_016",
+  edu_total = "B15003_001",
+  bachelors = "B15003_022",
+  masters = "B15003_023",
+  professional = "B15003_024",
+  doctorate = "B15003_025",
+  married = "B11001_003"
+)
+
+acs <- get_acs(
+  geography = "tract",
+  variables = vars,
+  year = 2022,
+  state = "NY",
+  county = c("Bronx", "Kings", "New York", "Queens", "Richmond"),
+  geometry = TRUE,
+  output = "wide"
+)
+
+```
+
+The above code cell creates a vector of ACS variables to use in the API call to the US Census Bureau. In the call I request the census tract level statistics in the five counties that make up New York City on the demographic variables of the total population, the population of White residents, the population of Black residents, the population of Asian residents, the population of Hispanic residents, the foreign-born population, the median household income, the number of owner occupied units, the number of renter occupied units, the number of detached single family homes, the total housing units, the number of motor-vehicle commuters (along with those who drive alone versus carpool), those who take public transportation to work, those who walk to work, the total number of residents over 25 with at least a high school diploma/GED (along with who has a Bachelor's versus Master's versus Professional degree versus Doctorate), and finally the married population. This set of demographic variables provided a more than sufficient database to get an idea of the racial, cultural, and socioeconomic makeup of all of New York City's census tracts. The task that is incumbent upon us is to now "fit" this data at the census tract level onto the election district level.
+
+```{r eval=FALSE}
+acs <- st_transform(acs, st_crs(e_districts))
+
+#intersection of election districts and tracts
+ed_x_tract <- st_intersection(
+  e_districts %>% select(elect_dist),
+  acs %>% select(GEOID, all_of(paste0(names(vars), "E")))
+)
+
+ed_x_tract$overlap_area <- st_area(ed_x_tract)
+acs$tract_area <- st_area(acs)
+
+# join tract_area into intersection
+ed_x_tract <- ed_x_tract %>%
+  left_join(
+    acs %>% st_drop_geometry() %>% select(GEOID, tract_area),
+    by = "GEOID"
+  )
+
+#compute weights
+ed_x_tract$w <- as.numeric(ed_x_tract$overlap_area / ed_x_tract$tract_area)
+
+
+#apply weights to all acs variables
+demo_vars <- names(vars)
+
+for (v in demo_vars) {
+  ed_x_tract[[paste0(v, "_w")]] <- ed_x_tract[[paste0(v, "E")]] * ed_x_tract$w
+}
+
+
+#calculate for each election district and merge
+ed_demographics <- ed_x_tract %>%
+  st_drop_geometry() %>%
+  group_by(elect_dist) %>%
+  summarize(
+    across(ends_with("_w"), sum, na.rm = TRUE)
+  )
+
+eds_full <- eds_with_nta %>%
+  left_join(ed_demographics, by = "elect_dist")
+
+eds_full
+
+saveRDS(eds_full, "project/eds_full_clean.rds")
+
+```
+
+The previous code cell first transforms the newly pulled ACS data by setting its coordinate reference system to the same which our election district sf object uses. Then we find the intersection between the ED object and the ACS census tract object which geometrically splits each census tract wherever it crosses an election district boundary. Each resulting feature therefore represents the portion of a single census tract that lies within a specific election district. Next, we compute the area of each intersected geometry as well as the total area of the original census tract. Using these two quantities, we construct an area‐based weight equal to the share of the tract’s total area contained within that election district. This weight represents the proportion of the tract’s population or characteristics that we assume fall inside the ED under a uniform spatial distribution assumption. These weights are then used to scale tract‐level ACS estimates so they can be aggregated up to the ED level in a way that respects the underlying geography, rather than assigning entire tracts wholesale to a single district. We then loop over each ACS variable and multiply its tract‐level estimate by the corresponding weight. This produces weighted versions of each variable that represent the share of the tract’s demographic value allocated to a given election district based on its overlap. Next, we drop the geometry and group the data by election district, summing each weighted variable across all intersecting tract pieces. These aggregated demographic estimates are merged back into the main election district spatial object to produce a full ED demographic dataset that is saved as an RDS file for further analysis.
+
+```{r}
+eds_full <- readRDS("eds_full_clean.rds")
+
+#identify demographic columns
+demo_cols <- grep("_w$", names(eds_full), value = TRUE)
+
+
+#clean demographic columns
+eds_full <- eds_full %>%
+  mutate(across(all_of(demo_cols), ~ as.numeric(.))) %>%
+  mutate(across(all_of(demo_cols), ~ replace_na(., 0)))
+
+#constructing Staten Island's demographic profile
+si_profile <- eds_full %>%
+  st_drop_geometry() %>%                    
+  filter(county == "Richmond") %>%
+  summarize(across(all_of(demo_cols), mean)) %>%
+  unlist(use.names = FALSE)
+
+
+#demographic matrix
+demo_matrix <- eds_full %>%
+  st_drop_geometry() %>%                    
+  select(all_of(demo_cols)) %>%
+  as.matrix()
+
+#calculating euclidean distance of each ed to Staten Island demographically
+eds_full$demo_dist_to_SI <- sqrt(
+  rowSums(
+    (demo_matrix - matrix(si_profile, nrow = nrow(demo_matrix), ncol = length(si_profile), byrow = TRUE))^2
+  )
+)
+
+# same with political distance
+si_rep_mean <- eds_full %>%
+  st_drop_geometry() %>%
+  filter(county == "Richmond") %>%
+  summarize(rep_mean = mean(rep_pct, na.rm = TRUE)) %>%
+  pull(rep_mean)
+
+eds_full <- eds_full %>%
+  mutate(pol_dist_to_SI = abs(rep_pct - si_rep_mean))
+
+# ranking each ed
+eds_full <- eds_full %>%
+  mutate(
+    demo_rank = percent_rank(demo_dist_to_SI),
+    pol_rank  = percent_rank(pol_dist_to_SI),
+    si_similarity_index = (1 - demo_rank) * pol_rank
+  )
+
+eds_full_fixed <- eds_full %>%
+  group_by(elect_dist) %>%
+  slice(1) %>%      
+  ungroup() %>%
+  filter(county %in% c("Bronx", "Kings", "New York", "Queens"))
+
+
+#top 500 
+top_opposites <- eds_full_fixed %>%
+  arrange(desc(si_similarity_index)) %>%
+  select(elect_dist, county, ntaname, demo_rank, pol_rank, si_similarity_index) %>%
+  head(500)
+
+blues <- colorRampPalette(c("lightskyblue", "navyblue"))
+
+mapview(
+  top_opposites,
+  zcol = "si_similarity_index",
+  legend = TRUE,
+  col.regions = blues(100)
+)
+```
+
+This block of code reads back the constructed RDS file as an sf object identifies the weighted demographic variables as we named them in the past code block (with a "_w" at the end). We then clean said columns by mutating each value to be numeric and filling in missing values with zeroes. The demographic profile of Richmond County is constructed by summarizing the demographic columns (using the mean) of all EDs in the county, and we matricize the full ED dataset and this profile and calculate the Euclidean distance of each ED to the profile demographically. We then perform a similar set of operations to calculate the Euclidean political distance of each district from Staten Island's political leanings. An index is computed that measures a district's demographic closeness + political distance with the operation: si_similarity_index = (1 - demo_rank) * pol_rank. The EDs are then ranked on this index and we slice the top 500 districts that are demographically similar to Richmond County but vote opposingly. This mapview visualizes the EDs (restricted to non-Richmond EDs) and colors them from light blue to dark blue based on similarity score. Here we see clear pockets of EDs that are demographically similar yet politically different in North and Central Brooklyn, Southeastern Queens, Northern Manhattan, between Houston and 23rd Streets in Manhattan, and the Northeastern section of the Bronx. The next code cell will refine our investigation of these cluster formations.
+
+```{r}
+library(leafsync)
+
+
+eds_ranked <- eds_full_fixed %>%
+  arrange(desc(si_similarity_index))
+
+
+cuts <- c(50, 200, 500, 1000)
+
+# function that builds a single map for a given cutoff
+make_mv <- function(n) {
+  eds_ranked %>%
+    slice(1:n) %>%
+    mapview(
+      zcol = "si_similarity_index",
+      layer.name = paste0("Top ", n),
+      legend = TRUE,
+      col.regions = blues(100)
+    )
+}
+
+# build all maps
+mv_list <- lapply(cuts, make_mv)
+leafsync::sync(mv_list, sync = TRUE, ncol = 2)
+```
+
+The above code stitches together four separate visualizations of the top n EDs that are demographically similar yet politically distinct from Staten Island (with n equal to 50, 200, 500, and 1000). When visualizing the data in this manner, geographic cluster formation begins to become strikingly apparent. The most abundant clusters of EDs that meet our criteria form and grow primarily in North and Central Brooklyn (especially in neighborhoods like Bedford-Stuyvesant, Prospect Heights, and East Flatbush). It is relevant to note that Bedford-Stuyvesant (a neighborhood with a significant Italian-American population, much like Staten Island) catches one's eye immediately in this map; despite only housing about 2% (@nyc_popfactfinder) of New York City's residents, ED's in the neighborhood makes up 13.4% of the top 500 EDs that are demographically similar to Staten Island yet politically different. We also see deep clusters like this in Southeastern Queens (St. Albans, Laurelton, Rosedale, etc.), whose housing development and suburban neighborhood qualities mirror the layout of Staten Island immensely. It is remarkable how well our model detected clear clusters without any sort of training or supervision. These findings require further inquiries into these sorts of EDs using more refined GIS tools such as Local Moran's I and local indicators of spatial association.
+
+## PART 3: LOCAL MORAN'S I AND LISA
+In this section we move past mere mapview visualizations of our similarity index and approach GIS-backed evidence of our initial inclinations that there are clusters of neighborhoods that exist in North/Central Brooklyn and Southeastern Queens that are demographically similar to Staten Island but misaligned politically. The follow code calculates the Local Moran's I of non-Richmond EDs in regards to this criteria:
+```{r}
+moran_data <- eds_full %>% filter(!is.na(eds_full$si_similarity_index)) %>% filter(county %in% c("Bronx", "Kings", "New York", "Queens"))
+moran_data <- st_transform(moran_data, 2263)  
+
+# create neighbors list using k-nearest neighbors
+coords <- st_coordinates(st_centroid(moran_data))
+knn_nb <- knearneigh(coords, k = 8)
+nb_obj <- knn2nb(knn_nb)
+
+# row-standardized spatial weights
+lw <- nb2listw(nb_obj, style = "W")
+
+# moran's i on similarity index
+mi <- moran.test(moran_data$si_similarity_index, lw)
+
+mi
+
+```
+
+The Local Moran’s I results suggest that we should reject the null hypothesis of spatial randomness at the 1% significance level and embrace the alternative hypothesis of positive spatial autocorrelation in the Staten Island similarity index. The estimated Moran’s I of 0.596 is far larger than its expected value under the null hypothesis, and the test statistic is highly significant (z = 104.02) with its p value less than our alpha of 0.01. In other words, election districts demographically similar to but politically different from Staten Island are spatially clustered rather than randomly distributed across the city. Substantively, these results reinforce my earlier visual findings that Staten Island–like demographic profiles form identifiable clusters in parts of North/Central Brooklyn and Southeastern Queens, even though these areas remain politically misaligned with Staten Island.
+
+```{r}
+local_mi <- localmoran(moran_data$si_similarity_index, lw)
+
+moran_data$local_I   <- local_mi[,1]
+moran_data$local_p   <- local_mi[,5] 
+
+#standardize variable
+z <- scale(moran_data$si_similarity_index)[,1]
+
+#spatial lag
+lag_z <- lag.listw(lw, z)
+
+#cluster assignments
+moran_data$cluster <- case_when(
+  z > 0 & lag_z > 0 & moran_data$local_p < 0.05 ~ "High-High",
+  z < 0 & lag_z < 0 & moran_data$local_p < 0.05 ~ "Low-Low",
+  z > 0 & lag_z < 0 & moran_data$local_p < 0.05 ~ "High-Low",
+  z < 0 & lag_z > 0 & moran_data$local_p < 0.05 ~ "Low-High",
+  TRUE                                         ~ "Not Significant"
+)
+
+clusters<-c("High-High","Low-Low","High-Low","Low-High","Not Significant")
+moran_data$cluster <- factor(moran_data$cluster,levels = clusters)
+
+palette <- c(
+  "High-High" = "darkorchid4",
+  "Low-Low" = "yellow3",
+  "High-Low" = "palegreen4",
+  "Low-High" = "mediumblue",
+  "Not Significant" = "gray75"
+)
+
+mapview(
+  moran_data,
+  zcol = "cluster",
+  col.regions = palette,
+  legend = TRUE,
+  layer.name = "LISA Clusters"
+)
+
+```
+
+This local indicators of spatial association (LISA) cluster map visualizes where Staten Island similarity index is spatially concentrated and how those concentrations relate to neighboring EDs. EDs are classified based on whether they exhibit high or low similarity index scores and whether they are surrounded by districts with similarly high or low values, conditional on statistical significance at the 5% level this time (though our previous results were significant at the 1% level, 5% is acceptable in this case as it also provides more than enough evidence to reject the null). High–High (purple) clusters identify statistically significant pockets where districts with high similarity indexes (demographically similar/politically different) are surrounded by similarly high districts, while Low–Low (yellow) clusters represent pockets of consistently low similarity indexes (mostly demographically similar/politically similar). High–Low (green) and Low–High (blue) clusters capture spatial outliers (districts whose similarity indexes contrast with that of their neighbors). Areas labeled as not significant do not exhibit statistically meaningful local spatial autocorrelation. It comes as no surprise that the aforementioned clusters previously detected in Brooklyn and Queens populate much of the purple clusters in this map, whereas the aforementioned conservative clusters (which may be both demographically and politically similar to Staten Island, hence scoring low on our defined similarity index) populate the yellow clusters. We can now confidently say, at the 5% significance level, that EDs that are demographically similar but politically different from Staten Island cluster together with strong spatial autocorrelation in North and Central Brooklyn neighborhoods like Bedford-Stuyvesant and Southeastern Queens neighborhoods like St. Albans. Altogether, the map highlights where our index forms coherent spatial clusters versus isolated pockets across New York City, providing localized evidence that complements the global Moran’s I results that there is high spatial autocorrelation in regards to being demographically similar yet politically different from Staten Island. Going forward, spatial autoregressive models will help us answer two key questions that will supplement these autocorrelation results: what demographic factors most cause an ED to be similar/different to Staten Island and what demographic variables explain being politically different from Staten Island amongst the top scorers on the similarity index.
+
+## PART 4: SPATIAL AUTOREGRESSION
+This fourth and final few blocks of code are the key to truly detecting whether Staten Island is a significant sociopolitical outlier within New York City, or whether its political behavior is expected given its demographic context. Here we will leverage spatial autoregression tools in R to find which demographic factors most cause an ED to be similar/different to Staten Island, which demographic variables explain being politically different from Staten Island amongst the top scorers on the similarity index, and how Staten Island differs demographically from typical conservative clusters within NYC. 
+
+#### What demographic factors most cause an ED to be similar to Staten Island?
+```{r}
+library(spdep)
+library(spatialreg)
+
+sar_demo_data <- eds_full %>%
+    filter(county != "Richmond") %>%
+    mutate(demo_dist = as.numeric(demo_dist_to_SI)) %>%
+    st_transform(2263) %>%
+    arrange(demo_dist) %>%
+    head(500)
+
+coords <- st_coordinates(st_centroid(sar_demo_data))
+knn_nb <- knearneigh(coords, k = 8)    
+nb_obj <- knn2nb(knn_nb)
+
+
+
+lw <- nb2listw(nb_obj, style = "W")
+
+
+
+demo_cols <- grep("_w$", names(sar_demo_data), value = TRUE)
+
+f_sar_demo <- as.formula(
+  paste("demo_dist ~", paste(demo_cols, collapse = " + "))
+)
+
+
+sar_demo <- lagsarlm(
+  formula = f_sar_demo,
+  data    = sar_demo_data %>% st_drop_geometry(),
+  listw   = lw,
+  method  = "eigen"
+)
+
+summary(sar_demo)
+```
+
+The spatial lag model provides strong evidence that demographic distance from Staten Island is not randomly distributed across space (amongst the top 500 most similar non-Richmond EDs to Staten Island). The spatial autoregressive parameter rho is positive and highly statistically significant at the 1% significance level with a p value below our alpha of 0.01, allowing us to reject the null hypothesis of no spatial dependence and embrace the alternative hypothesis that demographic similarity to Staten Island clusters spatially across New York City. This confirms that a spatial autoregressive framework is appropriate and improves upon a non-spatial linear model. Turning to the demographic variables, several factors emerge as statistically significant predictors of an election district’s demographic distance from Staten Island. Higher median household income is associated with greater demographic distance, with a p value below 0.01, allowing us to reject the null hypothesis at the 1% significance level that income has no relationship to similarity with Staten Island and embrace that EDs with higher median household incomes than Staten Island are more likely to be demographically different that the island overall. Similarly, a higher share of foreign-born residents increases demographic distance at the 5% significance level, indicating that districts with larger immigrant populations significantly diverge demographically from Staten Island. 
+
+In contrast, the prevalence of single-family detached housing is negatively associated with demographic distance at the 5% significance level, allowing us to reject the null that housing stock has no influence on overall demographic distance and conclude that suburban-style housing strongly increases similarity to Staten Island. This comes as no surprise considering the clustering we previously witnessed in suburban neighborhoods like St. Albans in Queens. Education and age also plays a meaningful role in demographic similarity; higher bachelor’s degree rates are associated with greater demographic similarity at the 5% significance, while lower median age exhibits lower demographic similarity at the 1% level, indicating that older, more educated districts (in terms of Bachelor's degrees) more closely resemble Staten Island’s demographic profile. Surprisingly,all race variables do not reach 10%, 5%, or 1% significance levels, preventing rejection of the null hypothesis for those factors. This comes as a shock as Staten Island is known for having a distinct racial breakdown from the other four boroughs, specifically in regards to its White population. Though Staten Island is the only borough where a majority of its residents are White (@furman_staten_island_profile), this racial disparity between the boroughs does not seem to be a major driver in overall demographic distance from the island. Overall, these results indicate that Staten Island’s demographic profile aligns closely with spatially clustered, suburban-style neighborhoods across New York City. However, because these same demographic characteristics do not uniformly translate into similar political behavior elsewhere in the city, the findings reinforce the broader conclusion that Staten Island’s political divergence cannot be explained by simply regressing demographics alone.
+
+#### What demographic variables explain being politically different from Staten Island amongst the top EDs that are demographically similar yet politically different?
+The following code cell addresses the question that still lingers after the previous spatial regression: what can explain these political differences amongst EDs that seemingly mirror Staten Island demographically? The cell below performs a new spatial autoregression that addresses just that:
+```{r}
+similar_cutoff  <- quantile(eds_full$demo_dist_to_SI, 0.20, na.rm = TRUE)
+opposite_cutoff <- quantile(eds_full$pol_dist_to_SI, 0.80, na.rm = TRUE)
+
+target_group_sf <- eds_full %>%
+  filter(
+    demo_dist_to_SI <= similar_cutoff,
+    pol_dist_to_SI  >= opposite_cutoff,
+    county != "Richmond"
+  ) %>%
+  st_transform(2263)   
+
+coords <- st_coordinates(st_centroid(target_group_sf))
+knn_nb <- knearneigh(coords, k = 8)
+nb_obj <- knn2nb(knn_nb)
+
+
+lw <- nb2listw(nb_obj, style = "W")
+
+
+demo_cols <- grep("_w$", names(target_group_sf), value = TRUE)
+
+f_sar <- as.formula(
+  paste("pol_dist_to_SI ~", paste(demo_cols, collapse = " + "))
+)
+
+
+sar_model <- lagsarlm(
+  formula = f_sar,
+  data    = target_group_sf %>% st_drop_geometry(),
+  listw   = lw,
+  method  = "eigen"   
+)
+
+summary(sar_model)
+```
+
+The second spatial autoregression examines what demographic factors explain political divergence from Staten Island among election districts that are already demographically similar to and politically distant from the borough. The spatial lag parameter is positive and highly statistically significant at the 1% level with a rho 0.505 and a p value below 0.01, allowing us to reject the null hypothesis of no spatial dependence and embrace the alternative hypothesis that political distance from Staten Island clusters spatially even within this restricted subset of demographically similar districts. This confirms that political divergence is not randomly distributed across space and that a spatial modeling is appropriate. Regarding the demographic covariates, several variables emerge as significant predictors of political distance from Staten Island. Upon first glance, housing occupancy (owner vs renter) seems to play a particularly strong role, however these variables have immense multicollinearity as units are either owner or renter occupied, therefore these results can be ignored. In contrast, a greater number of total housing units is associated with increased political distance at the 5% significance level, suggesting that denser residential environments, even when demographically similar, are more likely to diverge politically from Staten Island. This is not shocking as we have been gaining increasing evidence that suburbanity strongly influences our results. Education also appears to be a key driver of political divergence. Higher shares of residents with Bachelor’s degrees and Master’s degrees significantly increase political distance from Staten Island, at the 1% and 5% levels respectively, allowing us to reject the null hypothesis that education is unrelated to political behavior among these districts. This finding reinforces the idea that education level, rather than baseline demographic similarity, is a major factor for which Staten Island differs politically from otherwise similar neighborhoods. 
+
+Greater reliance on public transit is associated with increased political distance from Staten Island at the 5% level, supporting rejection of the null hypothesis that commuting patterns do not matter politically. In other words, among EDs that meet our criteria, those that rely more heavily on public transportation are those that differ more politically. In contrast, driving alone and carpooling do not reach 10%, 5%, or 1% significance levels, preventing rejection of the null for those factors. Race and immigration variables largely fail to achieve statistical significance, with the exception of the Asian population share, which is negatively associated with political distance at the 5% level. For most racial composition measures, however, we cannot reject the null hypothesis, suggesting that racial makeup alone does not explain why demographically Staten Island–like districts diverge politically. Taken together, these results indicate that political divergence from Staten Island among demographically similar election districts is driven less by race or income and more by education, housing density, and urban mobility patterns. Even when neighborhoods resemble Staten Island demographically, higher educational attainment and deeper integration into dense, transit-oriented urban systems are associated with markedly different political behavior. This provides strong evidence that Staten Island’s political distinctiveness cannot be explained by demographics alone, but instead reflects the borough’s unique position outside the social, educational, and infrastructural core of New York City.
+
+#### LISA conservative clusters map
+```{r}
+eds_geo <- eds_full %>%
+  filter(!is.na(rep_pct)) %>%
+  st_transform(2263)
+
+
+nb_rep <- poly2nb(eds_geo, queen = TRUE)
+lw_rep <- nb2listw(nb_rep, style = "W", zero.policy = TRUE)
+
+global_moran_rep <- moran.test(eds_geo$rep_pct, lw_rep)
+global_moran_rep
+
+#local morans I
+local_rep <- localmoran(eds_geo$rep_pct, lw_rep)
+
+eds_geo$Ii_rep <- local_rep[, 1]
+eds_geo$P_rep  <- local_rep[, 5]
+
+# standardized rep_pct and its spatial lag
+z_rep    <- scale(eds_geo$rep_pct)[, 1]
+lag_zrep <- lag.listw(lw_rep, z_rep)
+
+# LISA cluster categories for Republican vote share
+eds_geo$rep_cluster <- case_when(
+  z_rep > 0 & lag_zrep > 0 & eds_geo$P_rep < 0.05 ~ "High-High",
+  z_rep < 0 & lag_zrep < 0 & eds_geo$P_rep < 0.05 ~ "Low-Low",
+  z_rep > 0 & lag_zrep < 0 & eds_geo$P_rep < 0.05 ~ "High-Low",
+  z_rep < 0 & lag_zrep > 0 & eds_geo$P_rep < 0.05 ~ "Low-High",
+  TRUE                                            ~ "Not Significant"
+)
+
+eds_geo$rep_cluster <- factor(
+  eds_geo$rep_cluster,
+  levels = c("High-High", "Low-Low", "High-Low", "Low-High", "Not Significant")
+)
+
+pal_rep_clusters <- c(
+  "High-High"       = "darkred",
+  "Low-Low"         = "darkblue",
+  "High-Low"        = "orange",
+  "Low-High"        = "purple",
+  "Not Significant" = "gray80"
+)
+
+#map of conservative clusters
+mapview(
+  eds_geo,
+  zcol        = "rep_cluster",
+  col.regions = pal_rep_clusters,
+  legend      = TRUE,
+  layer.name  = "LISA clusters (Republican %)"
+)
+```
+
+Now, to return to speaking in more party-oriented terms, this local indicators of spatial association (LISA) cluster map visualizes where conservatives are spatially concentrated and how those concentrations relate to neighboring EDs. EDs are classified based on whether they exhibit high or low republican voting percentages and whether they are surrounded by districts with similarly high or low percentages, conditional on statistical significance at the 5% level. High–High (red) clusters identify statistically significant pockets where conservative districts are surrounded by similarly conservative districts, while Low–Low (blue) clusters represent pockets of consistently Democratic voters. High–Low (orange) and Low–High (purple) clusters capture spatial outliers (districts whose voting patterns contrasts with that of their neighbors). Areas labeled as not significant do not exhibit statistically meaningful local spatial autocorrelation. It comes as no surprise that this map largely resembles the choropleth of dem_pct earlier in this project, where we see conservative clusters in Staten Island, South Brooklyn, and Northeastern Queens, while liberal pockets remain elsewhere. We can now confidently say, at the 5% significance level, that politically similar EDs cluster together with strong spatial autocorrelation across the entirety of the city. 
+
+#### Comparing Staten Island to your typical conservative clusters
+```{r}
+eds_geo_rates <- eds_geo %>%
+  mutate(
+    pop_w = as.numeric(pop_w),
+    commuters_w = as.numeric(commuters_w),
+    edu_total_w = as.numeric(edu_total_w),
+    total_units_w = as.numeric(total_units_w),
+    share_white = white_w / pop_w,
+    share_black = black_w / pop_w,
+    share_asian = asian_w / pop_w,
+    share_hispanic = hispanic_w / pop_w,
+    share_sfh = sf_detached_w / total_units_w,
+    share_owner = owner_occ_w / (owner_occ_w + renter_occ_w),
+    share_drive = drive_alone_w / commuters_w,
+    share_carpool = carpool_w / commuters_w,
+    share_transit = transit_total_w / commuters_w,
+    share_walk = walk_w / commuters_w,
+    share_bach = bachelors_w / edu_total_w,
+    share_mast = masters_w / edu_total_w,
+    share_prof = professional_w / edu_total_w,
+    share_phd = doctorate_w / edu_total_w,
+    med_income = med_income_w,
+  )
+
+
+eds_geo_rates <- eds_geo_rates %>%
+  mutate(
+    compare_group = case_when(
+      county == "Richmond" ~ "Staten Island EDs",
+      rep_cluster == "High-High" & county != "Richmond" ~ "Conservative Cluster EDs (non-SI)",
+      TRUE ~ NA_character_
+    )
+  )
+
+comparison_table <- eds_geo_rates %>%
+  st_drop_geometry() %>%
+  filter(!is.na(compare_group)) %>%
+  group_by(compare_group) %>%
+  summarize(
+    n_EDs = n(),
+    med_income = mean(med_income, na.rm = TRUE),
+    share_sfh = mean(share_sfh, na.rm = TRUE),
+    share_owner = mean(share_owner, na.rm = TRUE),
+    share_drive = mean(share_drive, na.rm = TRUE),
+    share_transit = mean(share_transit, na.rm = TRUE),
+    share_white = mean(share_white, na.rm = TRUE),
+    share_black = mean(share_black, na.rm = TRUE),
+    share_asian = mean(share_asian, na.rm = TRUE),
+    share_hispanic = mean(share_hispanic, na.rm = TRUE),
+    share_bach = mean(share_bach, na.rm = TRUE),
+    share_mast = mean(share_mast, na.rm = TRUE),
+    share_prof = mean(share_prof, na.rm = TRUE),
+    share_phd = mean(share_phd, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+comparison_table
+```
+
+This comparison contrasts Staten Island election districts with conservative (High–High) clusters elsewhere in New York City to assess whether Staten Island simply resembles the city’s typical conservative neighborhoods demographically, or whether it remains distinct even relative to them. The results indicate that while Staten Island shares some broad similarities with other conservative clusters, it remains demographically unique along several key factors. Staten Island election districts are distinctly more suburban, they have nearly double the rate of single-family detached housing compared to conservative clusters outside Staten Island (0.35 versus 0.18) and substantially higher homeownership rates (0.69 versus 0.50). Mobility patterns further reinforce this distinction; Staten Island residents are far more likely to drive to work (0.62 versus 0.40) and considerably less likely to rely on public transit (0.25 versus 0.38). These statistics suggest that Staten Island’s conservatism is embedded in a distinctly auto-oriented, low-density residential environment that is not fully replicated elsewhere in the city.
+
+Racial breakdowns also differ meaningfully between the two groups. Staten Island election districts are substantially more white on average (66% versus 52%) and have much smaller Asian populations (12% versus 27%) than conservative clusters in other boroughs. Hispanic population shares are relatively similar across the two groups, while Staten Island has a somewhat higher Black population share. These differences suggest that conservative clusters outside Staten Island are far more racially diverse, even when they exhibit similar voting behavior. In contrast, education level is largely comparable across the two groups. Shares of residents with bachelor’s, master’s, and professional degrees are similar, indicating that differences in political behavior between Staten Island and other conservative clusters are not primarily driven by education alone. Median household income is actually lower in Staten Island than in conservative clusters elsewhere, confirming that Staten Island’s political distinctiveness cannot be reduced to income level. Taken together, this comparison shows that Staten Island is not merely an expanded version of New York City’s typical conservative neighborhood. Instead, it represents a qualitatively different demographic configuration, one defined by higher homeownership, greater car reliance, lower housing density, and a distinct racial makeup. These structural differences help explain why Staten Island’s conservatism is both more durable and more spatially coherent than conservative pockets elsewhere in the city, reinforcing the broader conclusion that Staten Island functions as a genuine sociopolitical outlier within New York City.
+
+```{r}
+eds_sim <- eds_full %>%
+  filter(!is.na(si_similarity_index)) %>%
+  st_transform(2263)
+
+blues <- colorRampPalette(c("lightskyblue", "navyblue"))
+
+map_si <- mapview(
+  eds_sim %>% filter(county != "Richmond"),
+  zcol        = "si_similarity_index",
+  legend      = TRUE,
+  col.regions = blues(100),
+  layer.name  = "Staten Island Similarity Index"
+)
+
+si_eds <- eds_sim %>% filter(county == "Richmond")
+
+si_like_not <- eds_sim %>% filter(elect_dist %in% top_opposites$elect_dist,county != "Richmond")
+
+map_si +mapview(si_eds, col.regions = "red", layer.name = "Staten Island EDs")
+```
+
+We then end our final technical section with a more complete version of our previous mapviews that demonstrates the top EDs that are demographically similar yet politically different from Staten Island by constructing a choropleth of our similarity index which runs from light blue for low scores to dark blue for high scores. Further, Richmond County's EDs are colored in a constant red to contrast from the rest of the four boroughs. This project wants to end on a complete picture of the phenomenon we have been capturing in this project (election districts that fit the demographic profile of Staten Island yet do not follow politically), and whether this phenomenon truly indicates Staten Island as isolated politically from the rest of New York City.
+
+## CONCLUSIONS
+
+This research set out to determine whether Staten Island represents a genuine political outlier within New York City, or whether its conservative voting patterns simply reflect the demographic characteristics of other conservative neighborhoods throughout the boroughs. Through a comprehensive GIS-driven analysis combining spatial autocorrelation methods, cluster detection, and spatial autoregression models, the evidence overwhelmingly supports the conclusion that Staten Island is indeed a sociopolitical outlier—one whose political distinctiveness cannot be explained by typical demographic indicators.
+
+The initial choropleth visualization of the 2022 Senate election results revealed Staten Island's immense political divergence from the rest of New York City. While Democratic incumbent Chuck Schumer won 74% of the two-party vote citywide, Richmond County broke 63% to 37% in favor of Republican challenger Joe Pinion, a dramatic swing from the citywide average. This visualization also demonstrated other conservative clusters in Southern Brooklyn and Northeastern Queens, sparking a more nuanced investigation into whether Staten Island's political behavior was unique or merely representative of similar demographic compositions.
+
+By constructing a similarity index that identified election districts demographically similar to Staten Island yet politically different, the analysis revealed striking spatial clustering patterns. Using Euclidean distance measures and percentile rankings, the research identified hundreds of EDs—concentrated primarily in North and Central Brooklyn (notably Bedford-Stuyvesant) and Southeastern Queens (including St. Albans, Laurelton, and Rosedale)—that shared Staten Island's demographic profile but maintained distinctly Democratic voting patterns. The existence of these clusters raised a critical question: if demographics alone explained Staten Island's conservatism, why did demographically similar neighborhoods elsewhere in the city vote so opposingly?
+
+Local Moran's I and LISA cluster analysis provided definitive spatial evidence that these patterns were not random. The Moran's I statistic of 0.596, with a p value less than 0.01, confirmed strong positive spatial autocorrelation in the similarity index, rejecting the null hypothesis of spatial randomness at the 1% significance level. The subsequent LISA cluster map revealed statistically significant High-High clusters—areas where demographically similar yet politically divergent EDs were surrounded by similarly configured districts (concentrated in the Brooklyn and Queens neighborhoods identified through initial mapping). These results demonstrated that the demographic similarity/political divergence relationship was not merely a statistical anomaly but a coherent spatial phenomenon that clustered in identifiable neighborhoods.
+
+Spatial autoregression models further highlighted the drivers of both demographic similarity and political divergence. Among the top 500 demographically similar non-Richmond EDs, the spatial lag model confirmed that demographic distance from Staten Island exhibited significant spatial clustering (rho positive and significant at a p value under 0.01). Notably, higher median household income and greater foreign-born populations increased demographic distance, while single-family detached housing strongly predicted demographic similarity. These findings aligned with the suburban character of Staten Island and its demographically similar counterparts in Southeastern Queens. Surprisingly, racial composition variables did not achieve statistical significance, suggesting that Staten Island's distinctive racial profile (particularly its majority-White population) was not a key indicator of overall demographic distance from other boroughs' EDs.
+
+The second spatial autoregression, focusing on political distance among demographically similar districts, revealed that education, housing density, and transit patterns (rather than race or income) were the key factors explaining political divergence. Higher rates of bachelor's and master's degree attainment, greater housing density, and greater reliance on public transit were all associated with increased political distance from Staten Island among districts that already matched its demographic profile. These findings suggest that even when neighborhoods share Staten Island's broad demographic characteristics, deeper integration into dense, transit-oriented, and highly educated urban systems is associated with markedly different political behavior.
+
+The final comparison between Staten Island election districts and conservative High-High clusters elsewhere in New York City further reinforced Staten Island's outlier status. While both groups exhibited similar voting patterns, Staten Island was distinctly more suburban: nearly double the rate of single-family detached housing (0.35 versus 0.18), substantially higher homeownership rates (0.69 versus 0.50), far greater reliance on automobile commuting (0.62 versus 0.40), and significantly less public transit use (0.25 versus 0.38). Staten Island also maintained a more homogeneous racial composition, with 66% White residents compared to 52% in other conservative clusters, and a much smaller Asian population share (12% versus 27%). These structural differences help explain why Staten Island's conservatism is both more durable and more spatially coherent than conservative pockets elsewhere in the city.
+
+Taken together, these findings provide a clear answer to the central research question: Staten Island is indeed a genuine sociopolitical outlier within New York City, but not in the way that prior research has often assumed. The borough's political distinctiveness cannot be reduced to demographics alone, as evidenced by the hundreds of demographically similar election districts throughout Brooklyn and Queens that maintain Democratic voting patterns. Instead, Staten Island's outlier status stems from its unique combination of suburban physical infrastructure, automobile-oriented transportation systems, lower housing density, and distinct racial composition (structural factors that create a qualitatively different sociopolitical environment than even other conservative neighborhoods in the city).
+
+These findings have important implications for understanding urban political geography more broadly. The research demonstrates that political behavior clusters geographically and that demographic similarity does not guarantee political alignment. The spatial clustering of demographically similar yet politically divergent neighborhoods suggests that local context, infrastructure, and social networks matter deeply for political behavior, even within the same metropolitan area. For New York City specifically, these results help explain why Staten Island has maintained its conservative orientation even as the rest of the city has remained to the left, and why the borough's political transformation from purple to deep red over the past decade represents a genuine shift rather than mere demographic change.
+
+Future research could extend this analysis in several productive directions. Examining other elections, particularly local races where Staten Island's divergence may be even more pronounced, could test whether these patterns hold across different electoral contexts. Longitudinal analysis tracking how these spatial patterns have evolved over time, particularly during Staten Island's shift from Obama +2.5 in 2012 to Trump +29 in 2024, could provide additional insights into the mechanisms driving political change. Incorporating measures of social networks, media consumption, and community institutions could help explain why demographically similar neighborhoods develop such different political cultures. For example, GoFundMe just named Staten Island as the 14th most generous place in the country this year in terms of repeat donors (@mclawrence_staten_island_gofundme_2025); investigating what types of charities and crowdsourcing initiatives Islanders are contributing to may provide even more insight into the Island's reinforced political behavior. Finally, comparative work examining other politically divergent suburban enclaves within liberal metropolitan areas could determine whether Staten Island represents a unique case or a broader pattern of suburban-urban political cleavage.
+
+Ultimately, this research confirms what many New Yorkers have long known: Staten Island truly is an island, not just geographically but sociopolitically. While it shares demographic characteristics with neighborhoods across the five boroughs, its unique combination of suburban infrastructure, automobile dependence, and racial composition creates a distinct political environment that persists even in the face of the city's broader liberal trends. Understanding this outlier status (and the structural factors that sustain it) is essential for comprehending the complex political geography of the United States' largest and most diverse city.
